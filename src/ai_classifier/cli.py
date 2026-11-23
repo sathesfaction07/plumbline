@@ -49,7 +49,7 @@ def _load(settings: Settings, products: Path | None, labels: Path | None):
 
 
 @click.group()
-@click.version_option("0.1.0", prog_name="ai-classifier")
+@click.version_option("0.1.0", prog_name="plumbline")
 def main() -> None:
     """Multimodal product classification with measured confidence calibration."""
 

@@ -1,4 +1,4 @@
-# AIClassifier — Technical Architecture
+# Plumbline — Technical Architecture
 
 ## Overview
 
@@ -12,7 +12,7 @@ Classifies products as true positive / false positive / not enough info across t
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│                          CLI (ai-classifier)                                  │
+│                          CLI (plumbline)                                  │
 │                                                                              │
 │  measure     classify -> pair with labels -> calibrate -> recommend           │
 │              EXIT 1 if any subgroup is unmeasurable, OR no threshold          │
@@ -170,7 +170,7 @@ Fixed by scanning all terms longest-first and blanking each matched span. Word b
 ## Data Flow
 
 ```
-1.  ai-classifier measure -i data/products.csv -l data/labels.csv
+1.  plumbline measure -i data/products.csv -l data/labels.csv
 2.  load_products -> 340 products
       blank attributes dropped; images split on , or |
       modality derived: 181 both, 99 text_only, 53 image_only, 7 neither

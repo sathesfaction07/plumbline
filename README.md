@@ -1,4 +1,4 @@
-# AIClassifier
+# Plumbline
 
 Classifies products as **true positive / false positive / not enough info**, then measures whether the confidence attached to those verdicts means anything.
 
@@ -59,12 +59,12 @@ bash setup.sh                 # verifies behaviour, not just install
 bash setup.sh --chart         # + matplotlib for PNG reliability diagrams
 source .venv/bin/activate
 
-ai-classifier doctor
-ai-classifier providers
-ai-classifier measure    -i data/products.csv -l data/labels.csv
-ai-classifier stability  -i data/products.csv -l data/labels.csv
-ai-classifier classify   -i data/products.csv -c out/ck.jsonl
-ai-classifier measure    -i data/products.csv -l data/labels.csv -o out/
+plumbline doctor
+plumbline providers
+plumbline measure    -i data/products.csv -l data/labels.csv
+plumbline stability  -i data/products.csv -l data/labels.csv
+plumbline classify   -i data/products.csv -c out/ck.jsonl
+plumbline measure    -i data/products.csv -l data/labels.csv -o out/
 ```
 
 `measure` on the shipped catalogue:

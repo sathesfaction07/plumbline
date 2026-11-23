@@ -360,12 +360,12 @@ Setup complete.
 
   source .venv/bin/activate
 
-  ai-classifier doctor
-  ai-classifier providers
-  ai-classifier measure -i data/products.csv -l data/labels.csv
-  ai-classifier stability -i data/products.csv -l data/labels.csv
-  ai-classifier classify -i data/products.csv -c out/ck.jsonl
-  ai-classifier measure -i data/products.csv -l data/labels.csv -o out/
+  plumbline doctor
+  plumbline providers
+  plumbline measure -i data/products.csv -l data/labels.csv
+  plumbline stability -i data/products.csv -l data/labels.csv
+  plumbline classify -i data/products.csv -c out/ck.jsonl
+  plumbline measure -i data/products.csv -l data/labels.csv -o out/
 
 `measure` exits non-zero when a subgroup could not be measured at all, or when no
 confidence threshold reaches the target accuracy. Both mean "do not automate this yet",

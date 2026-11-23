@@ -29,7 +29,7 @@ jobs:
         run: pytest -q --cov=ai_classifier --cov-report=term-missing
 
       - name: Doctor runs with no credentials and no network
-        run: ai-classifier doctor -i data/products.csv -l data/labels.csv
+        run: plumbline doctor -i data/products.csv -l data/labels.csv
 
       - name: An unmeasured subgroup must not report a score
         # ECE is a distance: 0.0 is the BEST possible value. A subgroup nobody answered
@@ -91,7 +91,7 @@ jobs:
       - name: The shipped catalogue behaves as documented
         run: |
           # Non-zero is expected: the offline provider is blind to image-only listings.
-          ai-classifier measure -i data/products.csv -l data/labels.csv \
+          plumbline measure -i data/products.csv -l data/labels.csv \
             --no-confusion -o /tmp/ci-out || true
           python - <<'PY'
           import json
@@ -116,12 +116,12 @@ jobs:
 
       - name: measure exits non-zero on a blind spot
         run: |
-          ! ai-classifier measure -i data/products.csv -l data/labels.csv --no-confusion
+          ! plumbline measure -i data/products.csv -l data/labels.csv --no-confusion
           echo "gated, as intended"
 
       - name: The report prints n/a and never 0.0000 for an unmeasured subgroup
         run: |
-          ai-classifier measure -i data/products.csv -l data/labels.csv \
+          plumbline measure -i data/products.csv -l data/labels.csv \
             --no-confusion > /tmp/report.txt || true
           grep -E '^\s+image_only' /tmp/report.txt | grep -q 'n/a'
           ! grep -E '^\s+image_only.*0\.0000' /tmp/report.txt
@@ -130,9 +130,9 @@ jobs:
 
       - name: A batch resumes without repeating work
         run: |
-          ai-classifier classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/first.txt
+          plumbline classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/first.txt
           grep -q 'newly run       340' /tmp/first.txt
-          ai-classifier classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/second.txt
+          plumbline classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/second.txt
           grep -q 'from checkpoint 340' /tmp/second.txt
           grep -q 'newly run       0' /tmp/second.txt
 
