@@ -1,0 +1,137 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: pip install -e ".[dev,chart]"
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Test
+        run: pytest -q --cov=ai_classifier --cov-report=term-missing
+
+      - name: Doctor runs with no credentials and no network
+        run: ai-classifier doctor -i data/products.csv -l data/labels.csv
+
+      - name: An unmeasured subgroup must not report a score
+        # ECE is a distance: 0.0 is the BEST possible value. A subgroup nobody answered
+        # used to return exactly that, so ranking modalities by ECE put the two the
+        # provider is blind to at the top.
+        run: |
+          python - <<'PY'
+          from ai_classifier.core.calibrate import calibrate, expected_calibration_error
+          from ai_classifier.models import Classification, Label, Modality, Outcome, Verdict
+
+          assert expected_calibration_error([]) is None
+
+          def declined(i):
+              pid = f"D-{i}"
+              return Outcome(
+                  classification=Classification(
+                      product_id=pid, verdict=Verdict.NOT_ENOUGH_INFO, confidence=0.0,
+                      modality=Modality.IMAGE_ONLY, provider="ci",
+                  ),
+                  label=Label(product_id=pid, verdict=Verdict.TRUE_POSITIVE),
+              )
+
+          report = calibrate([declined(i) for i in range(30)])
+          assert report.ece is None, report.ece
+          assert report.accuracy is None, report.accuracy
+          assert not report.measurable
+          print("30 abstentions -> ece None, accuracy None")
+          PY
+
+      - name: A confident abstention is refused
+        run: |
+          python - <<'PY'
+          from ai_classifier.models import Classification, Modality, Verdict
+          try:
+              Classification(
+                  product_id="Z", verdict=Verdict.NOT_ENOUGH_INFO, confidence=0.97,
+                  modality=Modality.BOTH, provider="ci",
+              )
+              raise SystemExit("a 97%-confident abstention was accepted")
+          except ValueError:
+              print("refused, as it should be")
+          PY
+
+      - name: A negation does not fire the term it negates
+        # "flammable" is a substring of "non flammable", so scanning the tables
+        # independently made a pure contradiction cancel to zero and abstain.
+        run: |
+          python - <<'PY'
+          from ai_classifier.models import Product, Verdict
+          from ai_classifier.providers import build
+          p = build("offline")
+          got = p.classify(Product(product_id="P", attributes={"d": "this is non flammable"}))
+          assert got.verdict is Verdict.FALSE_POSITIVE, got
+          got = p.classify(Product(product_id="P", attributes={"d": "contains flammable aerosol"}))
+          assert got.verdict is Verdict.TRUE_POSITIVE, got
+          print("masking holds in both directions")
+          PY
+
+      - name: The shipped catalogue behaves as documented
+        run: |
+          # Non-zero is expected: the offline provider is blind to image-only listings.
+          ai-classifier measure -i data/products.csv -l data/labels.csv \
+            --no-confusion -o /tmp/ci-out || true
+          python - <<'PY'
+          import json
+          payload = json.load(open("/tmp/ci-out/report.json"))
+          summary = payload["summary"]
+          assert summary["items"] == 280, summary
+          assert summary["answered"] == 223, summary
+          assert summary["measurable"] is True
+          assert summary["direction"] == "overconfident", summary
+
+          image_only = payload["by_modality"]["image_only"]
+          assert image_only["items"] == 43, image_only
+          assert image_only["answered"] == 0, image_only
+          assert image_only["ece"] is None, "a blind subgroup must not carry a score"
+          assert image_only["measurable"] is False
+
+          assert payload["by_modality"]["both"]["ece"] is not None
+          assert [s["subgroup"] for s in payload["blind_spots"]] == ["image_only", "neither"]
+          assert payload["threshold"]["reachable"] is False
+          print("summary:", summary)
+          PY
+
+      - name: measure exits non-zero on a blind spot
+        run: |
+          ! ai-classifier measure -i data/products.csv -l data/labels.csv --no-confusion
+          echo "gated, as intended"
+
+      - name: The report prints n/a and never 0.0000 for an unmeasured subgroup
+        run: |
+          ai-classifier measure -i data/products.csv -l data/labels.csv \
+            --no-confusion > /tmp/report.txt || true
+          grep -E '^\s+image_only' /tmp/report.txt | grep -q 'n/a'
+          ! grep -E '^\s+image_only.*0\.0000' /tmp/report.txt
+          grep -q 'NONE answered' /tmp/report.txt
+          echo "n/a present, 0.0000 absent, blind spot named"
+
+      - name: A batch resumes without repeating work
+        run: |
+          ai-classifier classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/first.txt
+          grep -q 'newly run       340' /tmp/first.txt
+          ai-classifier classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/second.txt
+          grep -q 'from checkpoint 340' /tmp/second.txt
+          grep -q 'newly run       0' /tmp/second.txt
