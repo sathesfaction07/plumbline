@@ -135,3 +135,25 @@ jobs:
           ai-classifier classify -i data/products.csv -c /tmp/ck.jsonl | tee /tmp/second.txt
           grep -q 'from checkpoint 340' /tmp/second.txt
           grep -q 'newly run       0' /tmp/second.txt
+
+  test-windows:
+    # The Linux job runs the full suite plus this project's own checks. This job runs the
+    # test suite on Windows, where the default encoding is cp1252 and paths use backslashes:
+    # several projects in this portfolio shipped bugs that only failed there.
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          pip install -e ".[dev,chart]"
+
+      - name: Test
+        run: pytest -q
