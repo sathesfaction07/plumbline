@@ -8,7 +8,7 @@ Accepted
 
 A classifier that can say "I don't know" is a fundamentally different object from one that cannot, and the difference propagates into every number computed downstream.
 
-The spec's hard cases make abstention unavoidable. An **image-only listing** carries pictures and no usable text, so a text provider has nothing to read. An **ambiguous product** — is it a toy or a collectible? — has evidence pointing both ways. A **contradictory listing** says "lithium battery" and "battery free" in the same description. In all three the honest answer is that the evidence does not settle it.
+The project brief's hard cases make abstention unavoidable. An **image-only listing** carries pictures and no usable text, so a text provider has nothing to read. An **ambiguous product** — is it a toy or a collectible? — has evidence pointing both ways. A **contradictory listing** says "lithium battery" and "battery free" in the same description. In all three the honest answer is that the evidence does not settle it.
 
 Forcing a binary verdict on those cases produces a guess with a confidence that cannot be anything but arbitrary. But admitting a third value means every aggregate has to answer a question it would rather not: does an abstention count as a wrong answer?
 
@@ -76,7 +76,7 @@ Refused rather than repaired. The sensible-looking repair — rewrite the confid
 
 **Good**
 
-- The three hard cases from the spec have an honest answer instead of a forced guess
+- The three hard cases from the project brief have an honest answer instead of a forced guess
 - Abstaining cannot improve a calibration score, so the metric cannot be gamed by refusing to answer
 - Abstaining cannot be punished as an error either, so an honest provider is not penalised against a guesser
 - A reviewer sees *why* something was declined, because the reason travels on the classification

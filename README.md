@@ -179,7 +179,7 @@ Fixed with longest-match-first scanning that blanks each matched span, so a nega
 
 **Resuming a checkpoint under a different provider is refused.** Blending two providers' verdicts into one calibration measurement produces a number describing neither. The checkpoint records which provider wrote it and the run stops rather than mixing.
 
-**No React UI, despite the spec asking for one.** A reliability diagram is normally a plot, and a plot can only be verified by a human looking at it. The text version asserts in CI, works over SSH, and needs no optional dependency — so it is the primary renderer, with an optional matplotlib PNG alongside for putting in front of people.
+**No React UI, despite the project brief asking for one.** A reliability diagram is normally a plot, and a plot can only be verified by a human looking at it. The text version asserts in CI, works over SSH, and needs no optional dependency — so it is the primary renderer, with an optional matplotlib PNG alongside for putting in front of people.
 
 **The cloud providers are not covered by tests, and their response parsing is.** `parse_response` is a module-level function taking a plain dict precisely so the interesting failures are testable without a network. It **raises** on anything unreadable rather than defaulting to `not_enough_info`, because defaulting would silently convert a broken integration into a pile of plausible-looking abstentions — the hardest failure mode to notice.
 
